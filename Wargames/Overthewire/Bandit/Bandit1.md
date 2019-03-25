@@ -1,4 +1,4 @@
-# [Bandit0](http://overthewire.org/wargames/bandit/bandit1.html)
+# [Bandit1](http://overthewire.org/wargames/bandit/bandit1.html)
 
 As told by the instructions, ssh into the server on port 2220 using the command:
 
