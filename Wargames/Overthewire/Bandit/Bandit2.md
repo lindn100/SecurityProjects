@@ -1,4 +1,4 @@
-# [Bandit1](http://overthewire.org/wargames/bandit/bandit2.html)
+# [Bandit2](http://overthewire.org/wargames/bandit/bandit2.html)
 
 Exit the previous ssh and enter in as bandit1 now, using the password we obtained from last level.
 
