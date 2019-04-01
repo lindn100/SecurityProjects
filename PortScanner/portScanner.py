@@ -1,4 +1,5 @@
 import socket #using built in module to access sockets
+import threading
 import sys #for exiting invalid inputs
 import ping #user created file for pinging before scanning
 from datetime import datetime #for timing
@@ -15,14 +16,18 @@ if limit < 1 or limit > 65535:
     sys.exit()
 
 t1 = datetime.now()
+screenLock = Semapohre(value=1) #using a semaphore to allow for threading but locking screen prints
+for port in range(1, limit):
+    t = Thread(target = scan, args = (targetIP, port))
+    t.start()
 
+def scan(targetIP, port):
 try:
-    for port in range(1, limit):
-        mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creating a socket stream
-        result = mySocket.connect_ex((targetIP, port))
-        if result == 0:
-            print ("Port {}:      Open".format(port))
-        mySocket.close()
+    mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creating a socket stream
+    result = mySocket.connect_ex((targetIP, port))
+    if result == 0:
+        screenLock.acquire()
+        print ("Port {}:      Open".format(port))
 
 except socket.gaierror:
     print ("DNS could not be resolved. Exiting")
@@ -31,6 +36,10 @@ except socket.gaierror:
 except socket.error:
     print ("Failed connection to server")
     sys.exit()
+
+finally:
+    screenLock.release()
+    mySocket.close()
 
 t2 = datetime.now()
 
