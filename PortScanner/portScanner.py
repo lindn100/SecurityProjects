@@ -37,3 +37,5 @@ for x in range(100):
 
 for worker in range(1, 1024):
     q.put(worker)
+
+print('Scan complete')
