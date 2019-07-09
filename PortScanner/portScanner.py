@@ -2,13 +2,14 @@ import threading
 import socket
 import sys
 import time
-from Queue import Queue
+import queue as q
 
 print_lock = threading.Lock()
 
 if len(sys.argv) !=2 :
     print ("Usage: portscan.py <host>")
     sys.exit(1)
+    
 
 host = sys.argv[1]
 
@@ -28,7 +29,7 @@ def threader():
         scan(worker)
         q.task_done()
 
-q = Queue()
+q = q.Queue()
 
 for x in range(100):
     t = threading.Thread(target=threader)
