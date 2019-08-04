@@ -42,7 +42,7 @@ sunset:cheer14
 
 ssh sunset@192.168.56.116
 ls
-cat user.txt (first flag: 5b5b8e9b01ef27a1cc0a2d5fa87d7190)
+cat user.txt (first flag)
 
 whoami
 uname -a
@@ -59,4 +59,3 @@ boom root
 cd /root
 ls
 cat flag.txt
-25d7ce0ee3cbf71efbac61f85d0c14fe
