@@ -13,7 +13,7 @@ firefox -> 192.168.56.103 to find IP of target
 
 httrack 192.168.56.103 to have offline version of all online files
 
-grep "html" *.html
+grep "flag" *.html
 
 	service.html:			<!-- flag1{b9bbcb33e11b80be759c4e844862482d} -->
 
