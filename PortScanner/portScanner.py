@@ -13,6 +13,8 @@ if len(sys.argv) !=2 :
 
 host = sys.argv[1]
 
+print ("***Scanning " + host + " ***")
+
 def scan(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -36,7 +38,7 @@ for x in range(100):
     t.daemon = True
     t.start()
 
-for worker in range(1, 1024):
+for worker in range(1, 65535):
     q.put(worker)
 
 print('Scan complete')
