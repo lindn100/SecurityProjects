@@ -7,13 +7,13 @@ import queue as q
 print_lock = threading.Lock()
 
 if len(sys.argv) !=2 :
-    print ("Usage: portscan.py <host>")
+    print ('Usage: python3 portScanner.py <host>')
     sys.exit(1)
-    
+
 
 host = sys.argv[1]
 
-print ("***Scanning " + host + " ***")
+print ('***** Scanning ' + host + ' *****')
 
 def scan(port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,4 +41,4 @@ for x in range(100):
 for worker in range(1, 65535):
     q.put(worker)
 
-print('Scan complete')
+print('***** Scan complete *****')
