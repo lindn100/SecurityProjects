@@ -1,4 +1,6 @@
 # Port Scanner
 
-This is a small project where I wanted to emulate a small version of NMap. I use this tool often to scan for vulnerable targets, so I wanted to implement a basic version myself, so that I could customize it if I wanted something like this in the future. Right now, this small python program pings the target, and once a connection is established, asks the user for for amount of ports they want scanned. It will then return the open ports.
+This is a side project where I wanted to emulate a small version of NMap. I use this tool often to scan for vulnerable targets, so I wanted to implement a basic version myself, so that I could undertand what's going on 'under the hood'. Right now, the ping program pings the target and returns if a connection was established. The portScanner program will take a host as a commandline argument and scan all 65535 ports. It will print all open ports.
 
+
+Note - This is written in python3 
