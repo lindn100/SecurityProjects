@@ -1,10 +1,21 @@
+import sys
 import os
 
-def pingTarget(x):
+if len(sys.argv) !=2:
+	print ('Usage: python3 ping.py <host>')
+	sys.exit(1)
 
-    response = os.system("ping -c 1 " + x + ">/dev/null")
+host = sys.argv[1]
+
+print ('***** Pinging ' + host + ' *****')
+
+
+def pingTarget(x):
+    response = os.system('ping -c 1 -i 0.2 ' + x + '>/dev/null') #ping 1 packet with a 0.2s timeout
 
     if response == 0:
-        return "Success"
+        print ('Success')
     else:
-        return "Failed with {}".format(response)
+        print ('Failed with {}'.format(response))
+
+pingTarget(host)
