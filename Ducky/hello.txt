@@ -1,0 +1,17 @@
+DEFAULTDELAY 250
+
+REM Wait for the system to get all set up
+DELAY 750
+
+REM Open the "Spotlight Search" and pull up the terminal/cli
+GUI SPACE
+STRING terminal
+ENTER
+
+REM Send a command to the machine through the terminal/cli
+STRING say 'you have been hacked'
+ENTER
+DELAY 2000
+
+REM Close the terminal window so there's no trace left behind
+GUI q
